@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:text="${title} + ' — StayAnalytics'">StayAnalytics</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"/>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+
+<header th:fragment="topnav" class="topnav">
+    <div class="topnav-inner">
+        <a class="brand" th:href="@{/home}">
+            <span class="dot">●</span> stayanalytics
+        </a>
+        <ul class="topnav-links">
+            <li><a th:href="@{/home}">Home</a></li>
+            <li><a th:href="@{/search}">Films</a></li>
+            <li><a th:href="@{/analytics}">Analytics</a></li>
+            <li sec:authorize="isAuthenticated()"><a th:href="@{/watchlist}">Watchlist</a></li>
+            <li sec:authorize="hasRole('ADMIN')"><a th:href="@{/admin}">Admin</a></li>
+        </ul>
+        <div class="topnav-actions">
+            <span sec:authorize="isAuthenticated()" class="who">
+                <strong sec:authentication="name">user</strong>
+            </span>
+            <form sec:authorize="isAuthenticated()" th:action="@{/logout}" method="post">
+                <button class="btn btn-ghost" style="padding: 6px 12px;" type="submit">Sign out</button>
+            </form>
+            <a sec:authorize="!isAuthenticated()" th:href="@{/login}" class="btn btn-ghost"
+               style="padding: 6px 12px;">Sign in</a>
+            <a sec:authorize="!isAuthenticated()" th:href="@{/signup}" class="btn btn-primary"
+               style="padding: 6px 14px;">Create account</a>
+        </div>
+    </div>
+</header>
+
+<footer th:fragment="footer" class="footer">
+    StayAnalytics · CSCI 4370 Term Project
+</footer>
+
+</body>
+</html>

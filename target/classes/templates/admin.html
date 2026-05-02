@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Admin')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: topnav}"></header>
+
+<main class="container">
+    <div class="section-head" style="margin-top: 28px;">
+        <h2>Admin dashboard</h2>
+        <span class="more">Restricted</span>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px;">
+        <section>
+            <div class="section-head">
+                <h2>Catalog by service</h2>
+            </div>
+            <table class="table">
+                <thead>
+                    <tr><th>Service</th><th>Titles</th></tr>
+                </thead>
+                <tbody>
+                    <tr th:each="s : ${perPlatform}">
+                        <td><span class="pill platform" th:text="${s.platformName}">Netflix</span></td>
+                        <td th:text="${s.titleCount}">0</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <div class="section-head">
+                <h2>Top trending</h2>
+            </div>
+            <table class="table">
+                <thead>
+                    <tr><th>Title</th><th>Score</th></tr>
+                </thead>
+                <tbody>
+                    <tr th:each="m : ${trending}">
+                        <td>
+                            <a th:href="@{'/movies/' + ${m.contentId}}" th:text="${m.title}">Title</a>
+                        </td>
+                        <td class="muted" th:text="${m.trendingScore}">0</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

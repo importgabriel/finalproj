@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Watchlist')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: topnav}"></header>
+
+<main class="container">
+    <div class="section-head">
+        <h2>My watchlist</h2>
+        <span class="more"><span th:text="${#lists.size(entries)}">0</span> films</span>
+    </div>
+
+    <div th:if="${info}"  class="alert alert-success" th:text="${info}"></div>
+    <div th:if="${error}" class="alert alert-error"   th:text="${error}"></div>
+
+    <div th:if="${#lists.isEmpty(entries)}" class="muted center mt-4">
+        Your watchlist is empty.
+        <a th:href="@{/search}">Find something to watch &rarr;</a>
+    </div>
+
+    <table th:if="${not #lists.isEmpty(entries)}" class="table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Service</th>
+                <th>Genre</th>
+                <th>★ IMDb</th>
+                <th>Status</th>
+                <th>Added</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="e : ${entries}">
+                <td>
+                    <a th:href="@{'/movies/' + ${e.content.contentId}}"
+                       th:text="${e.content.title}">Title</a>
+                </td>
+                <td><span class="pill platform" th:text="${e.content.platformName}">Netflix</span></td>
+                <td><span class="pill genre"    th:text="${e.content.genreName}">Drama</span></td>
+                <td th:text="${e.content.imdbRating}">8.0</td>
+                <td>
+                    <form th:action="@{'/watchlist/' + ${e.content.contentId} + '/status'}"
+                          method="post" class="flex gap-2">
+                        <select name="status" style="background: var(--bg-elev); color: var(--text);
+                                border: 1px solid var(--line); border-radius: 4px; padding: 6px 10px;">
+                            <option value="PLAN_TO_WATCH" th:selected="${e.status=='PLAN_TO_WATCH'}">Plan to watch</option>
+                            <option value="WATCHING"     th:selected="${e.status=='WATCHING'}">Watching</option>
+                            <option value="WATCHED"      th:selected="${e.status=='WATCHED'}">Watched</option>
+                        </select>
+                        <button class="btn" style="padding: 6px 12px;">Save</button>
+                    </form>
+                </td>
+                <td class="dim small"
+                    th:text="${#temporals.format(e.addedAt, 'yyyy-MM-dd')}">2026-01-01</td>
+                <td>
+                    <form th:action="@{'/watchlist/' + ${e.content.contentId} + '/remove'}" method="post">
+                        <button class="btn btn-danger" style="padding: 6px 12px;" type="submit">Remove</button>
+                    </form>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

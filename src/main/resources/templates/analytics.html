@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Analytics')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: topnav}"></header>
+
+<main class="container">
+    <div class="section-head" style="margin-top: 28px;">
+        <h2>Cross-platform analytics</h2>
+        <span class="more">Live from MySQL</span>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1.1fr 1fr; gap: 32px;">
+        <section>
+            <div class="section-head">
+                <h2>Average rating per service</h2>
+            </div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Service</th>
+                        <th>Titles</th>
+                        <th>Avg rating</th>
+                        <th>Avg popularity</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="s : ${perPlatform}">
+                        <td><span class="pill platform" th:text="${s.platformName}">Netflix</span></td>
+                        <td th:text="${s.titleCount}">100</td>
+                        <td>
+                            <div class="metric-row">
+                                <span class="num"
+                                      th:text="${#numbers.formatDecimal(s.avgRating, 1, 2)}">7.20</span>
+                                <div class="bar-track">
+                                    <div class="bar-fill"
+                                         th:style="'width: ' + ${s.avgRating != null ? s.avgRating.doubleValue() * 10 : 0} + '%;'"></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="muted small"
+                            th:text="${#numbers.formatDecimal(s.avgPopularity, 1, 2)}">300.00</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <div class="section-head">
+                <h2>Top community-rated</h2>
+            </div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Service</th>
+                        <th>★</th>
+                        <th>n</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="t : ${topRated}">
+                        <td>
+                            <a th:href="@{'/movies/' + ${t.contentId}}" th:text="${t.title}">Title</a>
+                        </td>
+                        <td><span class="pill platform" th:text="${t.platformName}">Netflix</span></td>
+                        <td th:text="${#numbers.formatDecimal(t.avgRating, 1, 2)}">9.20</td>
+                        <td class="muted" th:text="${t.reviews}">12</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </div>
+
+    <div class="section-head mt-5">
+        <h2>Genre × service breakdown</h2>
+        <span class="more">Min 5 titles</span>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Genre</th>
+                <th>Service</th>
+                <th>Titles</th>
+                <th>Avg IMDb rating</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="s : ${perGenrePlatform}">
+                <td><span class="pill genre" th:text="${s.genreName}">Drama</span></td>
+                <td><span class="pill platform" th:text="${s.platformName}">Netflix</span></td>
+                <td th:text="${s.titleCount}">120</td>
+                <td>
+                    <div class="metric-row">
+                        <span class="num"
+                              th:text="${#numbers.formatDecimal(s.avgRating, 1, 2)}">7.10</span>
+                        <div class="bar-track">
+                            <div class="bar-fill"
+                                 th:style="'width: ' + ${s.avgRating != null ? s.avgRating.doubleValue() * 10 : 0} + '%;'"></div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

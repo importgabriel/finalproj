@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head(${content.title})}"></head>
+<body>
+<header th:replace="~{fragments/layout :: topnav}"></header>
+
+<main class="container">
+
+    <div th:if="${info}"  class="alert alert-success" th:text="${info}"></div>
+    <div th:if="${error}" class="alert alert-error"   th:text="${error}"></div>
+
+    <div class="detail-grid">
+        <div>
+            <div class="detail-poster poster-mono"
+                 th:classappend="'poster-mono-' + ${content.genreSlug} + ' shade-' + ${content.monogramShade}"
+                 th:aria-label="${content.title}">
+                <span th:text="${content.monogramInitial}">A</span>
+                <span class="corner" th:text="${content.platformName}">Netflix</span>
+            </div>
+            <div sec:authorize="isAuthenticated()" class="mt-3">
+                <form th:if="${!inWatchlist}" th:action="@{'/movies/' + ${content.contentId} + '/watchlist'}"
+                      method="post">
+                    <button class="btn" style="width:100%;">+ Add to watchlist</button>
+                </form>
+                <a th:if="${inWatchlist}" th:href="@{/watchlist}"
+                   class="btn btn-primary" style="width:100%;">✓ In your watchlist</a>
+            </div>
+            <a sec:authorize="!isAuthenticated()" th:href="@{/login}"
+               class="btn mt-3" style="width:100%;">Sign in to track</a>
+        </div>
+
+        <div>
+            <h1 class="detail-title" th:text="${content.title}">Title</h1>
+            <div class="detail-sub">
+                <span th:text="${content.releaseYear}">2024</span>
+                <span class="sep">·</span>
+                <span th:text="${content.type}">Movie</span>
+                <span class="sep">·</span>
+                <span th:text="${content.platformName}">Netflix</span>
+                <span class="sep">·</span>
+                <span th:text="${content.genreName}">Drama</span>
+                <span class="sep">·</span>
+                <span th:text="${content.country}">USA</span>
+                <span class="sep">·</span>
+                <span th:text="${content.language}">English</span>
+                <span class="sep" th:if="${content.durationMinutes != null}">·</span>
+                <span th:if="${content.durationMinutes != null}"
+                      th:text="${content.durationMinutes + ' min'}">120 min</span>
+            </div>
+
+            <p class="muted" th:text="${content.description}">Description.</p>
+
+            <div class="metrics">
+                <div class="metric">
+                    <div class="lbl">IMDb rating</div>
+                    <div class="val">★ <span th:text="${content.imdbRating}">8.0</span></div>
+                    <div class="sub">
+                        <span th:text="${#numbers.formatInteger(content.votes != null ? content.votes : 0, 1)}">120000</span>
+                        votes
+                    </div>
+                </div>
+                <div class="metric">
+                    <div class="lbl">Community</div>
+                    <div class="val" th:text="${communityAvg != null ? #numbers.formatDecimal(communityAvg, 1, 2) : '—'}">—</div>
+                    <div class="sub"><span th:text="${communityCount}">0</span> reviews</div>
+                </div>
+                <div class="metric">
+                    <div class="lbl">Trending</div>
+                    <div class="val" th:text="${content.trendingScore}">0</div>
+                    <div class="sub">
+                        Pop <span th:text="${content.popularityScore}">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tags">
+                <span th:each="t : ${tags}" class="tag" th:text="${t}">tag</span>
+            </div>
+        </div>
+    </div>
+
+    <section th:if="${not #lists.isEmpty(similar)}">
+        <div class="section-head">
+            <h2>Similar films</h2>
+        </div>
+        <div class="poster-grid compact">
+            <a th:each="s : ${similar}" class="poster-card"
+               th:href="@{'/movies/' + ${s.contentId}}">
+                <div class="poster poster-mono"
+                     th:classappend="'poster-mono-' + ${s.genreSlug}"
+                     th:aria-label="${s.title}">
+                    <span th:text="${s.monogramInitial}">A</span>
+                </div>
+                <div class="meta">
+                    <div class="title" th:text="${s.title}">Title</div>
+                    <div class="sub">
+                        <span th:text="${s.sharedTags}">3</span> shared tags
+                    </div>
+                </div>
+            </a>
+        </div>
+    </section>
+
+    <section>
+        <div class="section-head">
+            <h2>Reviews</h2>
+            <span class="more"><span th:text="${communityCount}">0</span> total</span>
+        </div>
+
+        <form sec:authorize="isAuthenticated()"
+              th:action="@{'/movies/' + ${content.contentId} + '/reviews'}" method="post"
+              class="review-form">
+            <select name="rating">
+                <option th:each="i : ${#numbers.sequence(10, 1)}" th:value="${i}"
+                        th:text="${i}">10</option>
+            </select>
+            <input class="" name="comment" maxlength="500"
+                   placeholder="Your thoughts on this film…"/>
+            <button class="btn btn-primary" type="submit">Post review</button>
+        </form>
+
+        <div th:if="${#lists.isEmpty(reviews)}" class="muted">No reviews yet.</div>
+
+        <div th:each="r : ${reviews}" class="review">
+            <div class="review-head">
+                <span class="who" th:text="${r.username}">user</span>
+                <span class="stars">
+                    <span th:each="i : ${#numbers.sequence(1, r.rating)}">★</span><span
+                          class="dim" th:each="i : ${#numbers.sequence(1, 10 - r.rating)}">★</span>
+                </span>
+                <span class="ts"
+                      th:text="${#temporals.format(r.createdAt, 'yyyy-MM-dd HH:mm')}">2026-01-01</span>
+            </div>
+            <div class="review-body" th:text="${r.comment}">Comment.</div>
+        </div>
+    </section>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

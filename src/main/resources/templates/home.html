@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Home')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: topnav}"></header>
+
+<main class="container">
+
+    <form method="get" th:action="@{/search}" class="filter-bar">
+        <span class="label">Browse by</span>
+        <select name="year" onchange="this.form.submit()">
+            <option value="">Year</option>
+            <option th:each="y : ${#numbers.sequence(2025, 2010, -1)}"
+                    th:value="${y}" th:text="${y}">2024</option>
+        </select>
+        <select name="genreId" onchange="this.form.submit()">
+            <option value="">Genre</option>
+            <option th:each="g : ${genres}" th:value="${g.id}" th:text="${g.name}">Drama</option>
+        </select>
+        <select name="platformId" onchange="this.form.submit()">
+            <option value="">Service</option>
+            <option th:each="p : ${platforms}" th:value="${p.id}" th:text="${p.name}">Netflix</option>
+        </select>
+        <select name="type" onchange="this.form.submit()">
+            <option value="">Type</option>
+            <option value="Movie">Movie</option>
+            <option value="Series">Series</option>
+        </select>
+        <span class="grow"></span>
+        <span class="label">Find a film</span>
+        <div class="find">
+            <input type="text" name="title" placeholder="Search…"/>
+        </div>
+    </form>
+
+    <div th:if="${#lists.isEmpty(trending)}" class="alert alert-info">
+        No content yet — make sure data.sql has been loaded.
+    </div>
+
+    <section th:if="${not #lists.isEmpty(trending)}">
+        <div class="section-head">
+            <h2>Popular this week</h2>
+            <a class="more" th:href="@{/search}">More</a>
+        </div>
+        <div class="poster-grid">
+            <a th:each="m, it : ${trending}" th:if="${it.index < 4}"
+               class="poster-card" th:href="@{'/movies/' + ${m.contentId}}"
+               style="grid-column: span 1;">
+                <div class="poster poster-mono"
+                     th:classappend="'poster-mono-' + ${m.genreSlug} + ' shade-' + ${m.monogramShade}"
+                     th:aria-label="${m.title}">
+                    <span th:text="${m.monogramInitial}">A</span>
+                    <span class="corner" th:text="${m.platformName}">Netflix</span>
+                </div>
+                <div class="stats-row">
+                    <span class="stat"><span class="ico eye"></span>
+                        <span th:text="${m.votes != null ? #numbers.formatInteger(m.votes / 1000, 1) + 'K' : '—'}">120K</span></span>
+                    <span class="stat"><span class="ico list"></span>
+                        <span th:text="${m.popularityScore != null ? #numbers.formatInteger(m.popularityScore, 1) : '—'}">300</span></span>
+                    <span class="stat"><span class="ico heart"></span>
+                        <span th:text="${m.engagementScore != null ? #numbers.formatInteger(m.engagementScore, 1) : '—'}">2K</span></span>
+                </div>
+            </a>
+        </div>
+    </section>
+
+    <section class="promo" th:if="${not #lists.isEmpty(trending)}">
+        <div>
+            <h3>Cross-platform analytics, in one place.</h3>
+            <p>Compare ratings across Netflix, Prime Video, and Hotstar.
+               Track what you've watched, see how genres trend, and dive
+               into community ratings.</p>
+        </div>
+        <a class="badge" th:href="@{/analytics}">Open dashboard →</a>
+    </section>
+
+    <section th:if="${not #lists.isEmpty(trending)}">
+        <div class="section-head">
+            <h2>Just discovered</h2>
+            <a class="more" th:href="@{/search}">More</a>
+        </div>
+        <div class="poster-grid compact">
+            <a th:each="m, it : ${trending}" th:if="${it.index >= 4}"
+               class="poster-card" th:href="@{'/movies/' + ${m.contentId}}">
+                <div class="poster poster-mono"
+                     th:classappend="'poster-mono-' + ${m.genreSlug} + ' shade-' + ${m.monogramShade}"
+                     th:aria-label="${m.title}">
+                    <span th:text="${m.monogramInitial}">A</span>
+                    <span class="corner" th:text="${m.platformName}">Netflix</span>
+                </div>
+                <div class="meta">
+                    <div class="title" th:text="${m.title}">Title</div>
+                    <div class="sub">
+                        <span th:text="${m.releaseYear}">2024</span>
+                        · <span th:text="${m.platformName}">Netflix</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </section>
+
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

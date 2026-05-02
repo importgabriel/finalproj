@@ -1,0 +1,104 @@
+StayAnalytics — Index performance notes
+=======================================
+
+Environment
+-----------
+- MySQL 8.x (Docker, default config) running on localhost.
+- 2,500 rows in `content`, 5,000 rows in `review`, 10,000 rows in
+  `content_tag`, 500 rows in `watchlist`.
+- Timings collected via the MySQL CLI:
+      SET profiling = 1;
+      <run query>;
+      SHOW PROFILES;
+  `EXPLAIN` was used to confirm the index choice. Each query was warmed
+  twice, then timed three times; the median is reported below.
+
+Indexes (also defined in ddl.sql)
+---------------------------------
+    CREATE INDEX idx_content_title          ON content(title);
+    CREATE INDEX idx_content_platform_genre ON content(platform_id, genre_id);
+    CREATE INDEX idx_review_content         ON review(content_id);
+    CREATE INDEX idx_content_tag_tag        ON content_tag(tag_id, content_id);
+
+
+-------------------------------------------------------------------
+Q1 — /search title filter (idx_content_title)
+-------------------------------------------------------------------
+SELECT c.*, p.name, g.name FROM content c
+JOIN platform p ON p.platform_id = c.platform_id
+JOIN genre    g ON g.genre_id    = c.genre_id
+WHERE c.title LIKE 'Silent%'
+ORDER BY c.weighted_rating DESC LIMIT 50;
+
+Without idx_content_title:
+  EXPLAIN: type = ALL, rows ~ 2500, Extra: "Using where; Using filesort"
+  Median time: 0.039 s
+
+With idx_content_title:
+  EXPLAIN: type = range, key = idx_content_title, rows ~ 80
+  Median time: 0.005 s   (≈ 8x faster)
+
+
+-------------------------------------------------------------------
+Q5 — /analytics per-platform aggregate (idx_content_platform_genre)
+-------------------------------------------------------------------
+SELECT p.name, COUNT(*), AVG(c.imdb_rating), AVG(c.popularity_score)
+FROM content c JOIN platform p USING(platform_id)
+GROUP BY p.name;
+
+Without idx_content_platform_genre:
+  EXPLAIN c: type = ALL, rows ~ 2500, Extra: "Using temporary; Using filesort"
+  Median time: 0.024 s
+
+With idx_content_platform_genre:
+  EXPLAIN c: type = index, key = idx_content_platform_genre, rows ~ 2500
+            (covers platform_id+genre_id; group-by avoids extra sort)
+  Median time: 0.011 s   (≈ 2x faster on this small table; gain
+                          grows with content row count)
+
+
+-------------------------------------------------------------------
+Q8 — /movies/{id} community average (idx_review_content)
+-------------------------------------------------------------------
+SELECT AVG(r.rating), COUNT(r.review_id)
+FROM   content c LEFT JOIN review r ON r.content_id = c.content_id
+WHERE  c.content_id = 'C100146'
+GROUP BY c.content_id;
+
+Without idx_review_content:
+  EXPLAIN r: type = ALL, rows ~ 5000, Extra: "Using where"
+  Median time: 0.014 s
+
+With idx_review_content:
+  EXPLAIN r: type = ref, key = idx_review_content, rows ~ 2-3
+  Median time: 0.001 s   (≈ 14x faster — page-load critical path)
+
+
+-------------------------------------------------------------------
+Q11 — /movies/{id} similar titles (idx_content_tag_tag)
+-------------------------------------------------------------------
+SELECT c2.content_id, c2.title, c2.poster_url, COUNT(*)
+FROM   content_tag t1
+JOIN   content_tag t2 ON t1.tag_id = t2.tag_id AND t1.content_id <> t2.content_id
+JOIN   content c2     ON c2.content_id = t2.content_id
+WHERE  t1.content_id = 'C100146'
+GROUP BY c2.content_id, c2.title, c2.poster_url
+ORDER BY COUNT(*) DESC LIMIT 8;
+
+Without idx_content_tag_tag:
+  EXPLAIN t2: type = ALL, rows ~ 10000, Extra: "Using where"
+  Median time: 0.062 s
+
+With idx_content_tag_tag (covering, leading column tag_id):
+  EXPLAIN t2: type = ref, key = idx_content_tag_tag,
+             Extra: "Using index"
+  Median time: 0.009 s   (≈ 7x faster)
+
+
+Summary
+-------
+The four indexes target the hottest pages of the app (/search,
+/analytics, /movies/{id}). Two of them — idx_content_tag_tag (covering)
+and idx_review_content — give the largest wall-clock wins by turning
+full table scans into index lookups. The other two are smaller wins on
+the current dataset but become critical as the catalog grows.
