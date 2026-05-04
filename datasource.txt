@@ -1,6 +1,9 @@
 StayAnalytics — Data sources
 =============================
 
+https://www.kaggle.com/datasets/amaymishra11/ott-movies-and-series-dataset-ml-and-nlp-ready
+
+
 1. Content catalog (2,500 rows)
 -------------------------------
 File: ott_movies_clean_unique.csv (kept in the project root for
