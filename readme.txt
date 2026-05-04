@@ -46,6 +46,7 @@ Database connection (used in src/main/resources/application.properties)
                                    root password if different — both
                                    the property file and the grader's
                                    MySQL must agree.)
+  JDBC URL      : jdbc:mysql://localhost:3308/stayanalytics
 
 Demo accounts (seeded by data.sql)
 ----------------------------------
@@ -59,12 +60,13 @@ How to run
 
        docker run --name stayanalytics-mysql \
             -e MYSQL_ROOT_PASSWORD=root \
-            -p 3306:3306 -d mysql:8
+            -p 3308:3306 -d mysql:8
+       # If 3306 is free on your machine, you can use -p 3306:3306 instead.
 
 2. Load the schema and the demo data:
 
-       mysql -h 127.0.0.1 -uroot -proot < ddl.sql
-       mysql -h 127.0.0.1 -uroot -proot < data.sql
+       mysql -h 127.0.0.1 -P 3308 -uroot -proot < ddl.sql
+       mysql -h 127.0.0.1 -P 3308 -uroot -proot < data.sql
 
 3. Build & run the Spring Boot app:
 
