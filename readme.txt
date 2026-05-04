@@ -1,6 +1,6 @@
 ==================================================================
   StayAnalytics — Cross-Platform OTT Movie & Series Analytics
-  Term Project (CSCI 4370, Sami Menik, PhD)
+  Term Project (CSCI 4370, Menik)
 ==================================================================
 
 Group name: StayAnalytics
