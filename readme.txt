@@ -65,8 +65,15 @@ How to run
 
 2. Load the schema and the demo data:
 
+   Option A — if you have the mysql client installed:
+
        mysql -h 127.0.0.1 -P 3308 -uroot -proot < ddl.sql
        mysql -h 127.0.0.1 -P 3308 -uroot -proot < data.sql
+
+   Option B — if you don't have the mysql client (use Docker):
+
+       docker exec -i stayanalytics-mysql mysql -uroot -proot < ddl.sql
+       docker exec -i stayanalytics-mysql mysql -uroot -proot < data.sql
 
 3. Build & run the Spring Boot app:
 
